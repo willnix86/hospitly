@@ -9,29 +9,16 @@ import {
   Button,
   Avatar,
 } from '@mui/material';
-import SchedulerCalendar from '../../scheduling/SchedulingCalendar';
-import UpcomingShifts from '../../shifts/UpcomingShifts';
-import WorkHoursSummary from '../../user/WorkHoursSummary';
-import Notifications from '../../nav/Notifications';
-import AdminControls from '../../admin/AdminControls';
+import UserCalendar from './UserCalendar';
+import UpcomingShifts from './UpcomingShifts';
+import WorkHoursSummary from './WorkHoursSummary';
+import Notifications from './Notifications';
 
 import { User } from '../../../types';
 
 const HomeContent = ({ user }: { user: User }) => {
   return (
-    <Container maxWidth="lg">
-      {/* User Info and Welcome Message */}
-      <Box display="flex" alignItems="center" mb={4}>
-        <Avatar alt={user.name} src={user.avatar} sx={{ width: 56, height: 56, mr: 2 }} />
-        <Typography variant="h5">
-          Welcome, {user.name}!
-        </Typography>
-        {/* Option to log out */}
-        <Button variant="outlined" sx={{ ml: 'auto' }} onClick={() => alert('Logout functionality')}>
-          Logout
-        </Button>
-      </Box>
-
+    <Container maxWidth="xl">
       {/* Notifications Section */}
       <Box mt={6} mb={3}>
         <Notifications userId={user.id} />
@@ -55,7 +42,7 @@ const HomeContent = ({ user }: { user: User }) => {
             <Typography variant="h6" mb={2}>
               Your Schedule
             </Typography>
-            <SchedulerCalendar userId={user.id} />
+            <UserCalendar userId={user.id} />
             <Box display="flex" justifyContent="space-between" mt={3}>
               <Button variant="contained" color="primary">
                 Request Time Off
@@ -67,13 +54,6 @@ const HomeContent = ({ user }: { user: User }) => {
           </Paper>
         </Grid>
       </Grid>
-
-      {/* Admin Controls (only show if the user is an admin) */}
-      {user.role === 'admin' && (
-        <Box mt={6}>
-          <AdminControls />
-        </Box>
-      )}
     </Container>
   );
 };

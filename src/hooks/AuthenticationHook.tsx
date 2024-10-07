@@ -27,7 +27,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const loggedInUser: User = {
         id: 123,
         name: 'Dr. Smith',
-        role: 'resident',  // Could be 'admin' or 'resident'
+        role: 'admin',  // Could be 'admin' or 'resident'
         avatar: '/profile-picture.jpg',
       };
       setUser(loggedInUser);

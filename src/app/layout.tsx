@@ -6,6 +6,8 @@ import theme from '../styling/theme';
 
 import { AuthProvider } from "@/hooks/AuthenticationHook";
 
+import NavBar from "@/components/nav/NavBar";
+
 const geistSans = localFont({
   src: "../styling/fonts/GeistVF.woff",
   variable: "--font-geist-sans",
@@ -29,10 +31,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body className={`${geistSans.variable} ${geistMono.variable}`} style={{ margin: 0 }}>
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
             <AuthProvider>
+              <NavBar />
               {children}
             </AuthProvider>
           </ThemeProvider>
