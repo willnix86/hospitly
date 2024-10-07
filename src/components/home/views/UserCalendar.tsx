@@ -20,9 +20,14 @@ const UserCalendar = ({ userId }: { userId: number }) => {
     // Example event data. Replace with real data fetching logic.
     {
       title: 'On Call Shift',
-      start: new Date(),
-      end: new Date(),
+      start: new Date(2024, 9, 1),  // Example date: October 1, 2024
+      end: new Date(2024, 9, 1),    // Same day for all-day event
       allDay: true,
+    },
+    {
+      title: 'Meeting',
+      start: new Date(2024, 9, 5, 14, 0),  // Example event on October 5, 2024 at 2:00 PM
+      end: new Date(2024, 9, 5, 15, 0),    // Ending at 3:00 PM
     },
   ];
 
@@ -31,12 +36,12 @@ const UserCalendar = ({ userId }: { userId: number }) => {
       <Paper elevation={3} sx={{ padding: 2 }}>
         <Calendar
           localizer={localizer}
-          events={events}
+          events={events}  // Pass events to the calendar
           startAccessor="start"
           endAccessor="end"
           style={{ height: 500 }}
-          onSelectSlot={(slotInfo) => handleDateChange(slotInfo.start)}
-          selectable
+          onSelectSlot={(slotInfo) => handleDateChange(slotInfo.start)}  // Date selection logic
+          toolbar={false}
         />
         {selectedDate && (
           <Typography variant="body1" mt={2}>

@@ -4,17 +4,17 @@ import {
   Box,
   Container,
   Typography,
-  Grid,
   Paper,
-  Button,
-  Avatar,
+  Button
 } from '@mui/material';
-import UserCalendar from './UserCalendar';
-import UpcomingShifts from './UpcomingShifts';
-import WorkHoursSummary from './WorkHoursSummary';
-import Notifications from './Notifications';
+import Grid from '@mui/material/Grid2';
 
-import { User } from '../../../types';
+import UserCalendar from './views/UserCalendar';
+import UpcomingShifts from './views/UpcomingShifts';
+import WorkHoursSummary from './views/WorkHoursSummary';
+import Notifications from './views/Notifications';
+
+import { User } from '../../types';
 
 const HomeContent = ({ user }: { user: User }) => {
   return (
@@ -26,7 +26,7 @@ const HomeContent = ({ user }: { user: User }) => {
 
       <Grid container spacing={4}>
         {/* Left Column: Shifts and Work Hours */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs:12, md:4 }}>
           <Paper elevation={3} sx={{ padding: 3 }}>
             <UpcomingShifts userId={user.id} />
           </Paper>
@@ -37,7 +37,7 @@ const HomeContent = ({ user }: { user: User }) => {
         </Grid>
 
         {/* Right Column: Calendar and Actions */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs:12, md:8 }}>
           <Paper elevation={3} sx={{ padding: 3 }}>
             <Typography variant="h6" mb={2}>
               Your Schedule

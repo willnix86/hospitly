@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import SchedulingContent from './views/SchedulingContent';
+import SchedulingContent from './SchedulingContent';
 
 export default function Scheduling() {
   useEffect(() => {

@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '../../hooks/AuthenticationHook';
-import HomeContent from './views/HomeContent';
+import HomeContent from './HomeContent';
 
 export default function Home() {
   const { user, loading } = useAuth(); // Using a custom hook to access the authentication context
