@@ -4,34 +4,21 @@ import {
   Box,
   Container,
   Typography,
-  Grid,
   Paper,
-  Button,
-  Avatar,
+  Button
 } from '@mui/material';
-import SchedulerCalendar from '../../scheduling/SchedulingCalendar';
-import UpcomingShifts from '../../shifts/UpcomingShifts';
-import WorkHoursSummary from '../../user/WorkHoursSummary';
-import Notifications from '../../nav/Notifications';
-import AdminControls from '../../admin/AdminControls';
+import Grid from '@mui/material/Grid2';
 
-import { User } from '../../../types';
+import UserCalendar from './views/UserCalendar';
+import UpcomingShifts from './views/UpcomingShifts';
+import WorkHoursSummary from './views/WorkHoursSummary';
+import Notifications from './views/Notifications';
+
+import { User } from '../../types';
 
 const HomeContent = ({ user }: { user: User }) => {
   return (
-    <Container maxWidth="lg">
-      {/* User Info and Welcome Message */}
-      <Box display="flex" alignItems="center" mb={4}>
-        <Avatar alt={user.name} src={user.avatar} sx={{ width: 56, height: 56, mr: 2 }} />
-        <Typography variant="h5">
-          Welcome, {user.name}!
-        </Typography>
-        {/* Option to log out */}
-        <Button variant="outlined" sx={{ ml: 'auto' }} onClick={() => alert('Logout functionality')}>
-          Logout
-        </Button>
-      </Box>
-
+    <Container maxWidth="xl">
       {/* Notifications Section */}
       <Box mt={6} mb={3}>
         <Notifications userId={user.id} />
@@ -39,7 +26,7 @@ const HomeContent = ({ user }: { user: User }) => {
 
       <Grid container spacing={4}>
         {/* Left Column: Shifts and Work Hours */}
-        <Grid item xs={12} md={4}>
+        <Grid size={{ xs:12, md:4 }}>
           <Paper elevation={3} sx={{ padding: 3 }}>
             <UpcomingShifts userId={user.id} />
           </Paper>
@@ -50,12 +37,12 @@ const HomeContent = ({ user }: { user: User }) => {
         </Grid>
 
         {/* Right Column: Calendar and Actions */}
-        <Grid item xs={12} md={8}>
+        <Grid size={{ xs:12, md:8 }}>
           <Paper elevation={3} sx={{ padding: 3 }}>
             <Typography variant="h6" mb={2}>
               Your Schedule
             </Typography>
-            <SchedulerCalendar userId={user.id} />
+            <UserCalendar userId={user.id} />
             <Box display="flex" justifyContent="space-between" mt={3}>
               <Button variant="contained" color="primary">
                 Request Time Off
@@ -67,13 +54,6 @@ const HomeContent = ({ user }: { user: User }) => {
           </Paper>
         </Grid>
       </Grid>
-
-      {/* Admin Controls (only show if the user is an admin) */}
-      {user.role === 'admin' && (
-        <Box mt={6}>
-          <AdminControls />
-        </Box>
-      )}
     </Container>
   );
 };

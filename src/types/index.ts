@@ -1,5 +1,15 @@
-import User from './User/UserInterface';
-import AuthContextType from './Authentication/AuthContextType';
-import AuthProviderProps from './Authentication/AuthProviderProps';
+import User from './user/User';
+import AuthContextType from './authentication/AuthContextType';
+import AuthProviderProps from './authentication/AuthProviderProps';
+import Schedule from './schedule/Schedule';
+import ScheduleProps from './schedule/ScheduleProps';
+import { CalendarToolbarProps } from './CalendarToolbarTypes';
 
-export type { User, AuthContextType, AuthProviderProps };
+export type { 
+    User, 
+    Schedule, 
+    ScheduleProps, 
+    AuthContextType, 
+    AuthProviderProps,
+    CalendarToolbarProps
+};
