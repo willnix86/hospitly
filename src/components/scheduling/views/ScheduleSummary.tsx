@@ -1,23 +1,19 @@
 import * as React from 'react';
 import { Box, Typography, List, ListItem, ListItemText, Divider } from '@mui/material';
-import { ScheduleProps } from '@/types';
+import { CallScheduleData, ScheduleProps, Shift } from '@/types';
 
-const ScheduleSummary: React.FC<ScheduleProps> = ({ schedule }) => {
-  const callShiftsCount: { [name: string]: number } = {};
-
-  Object.values(schedule.onCall).forEach((users) => {
-    users.forEach((user) => {
-      if (!callShiftsCount[user.name]) {
-        callShiftsCount[user.name] = 0;
-      }
-      callShiftsCount[user.name] += 1;
-    });
-  });
+const ScheduleSummary = ({ data }: { data: CallScheduleData }) => {
+  const callShiftsCount = React.useMemo(() => {
+    return data.callShifts.reduce((acc, shift: Shift) => {
+      acc[shift.user.name] = (acc[shift.user.name] || 0) + 1;
+      return acc;
+    }, {} as { [name: string]: number });
+  }, [data.callShifts]);
 
   return (
     <Box sx={{ marginTop: 2 }}>
       <Typography variant="h6" gutterBottom>
-        Resident Summary for {schedule.month}
+        Resident Summary for {data.month}
       </Typography>
 
       {/* Vacation Section */}
@@ -25,10 +21,10 @@ const ScheduleSummary: React.FC<ScheduleProps> = ({ schedule }) => {
         Residents on Vacation:
       </Typography>
       <List>
-        {schedule.vacations.map((vacation, index) => (
+        {data.vacationDays.map((vacation, index) => (
           <ListItem key={index}>
             <ListItemText
-              primary={`${vacation.user.name}: ${vacation.startDate} to ${vacation.endDate}`}
+              primary={`${vacation.user.name}: ${vacation.startTime} to ${vacation.endTime}`}
             />
           </ListItem>
         ))}
@@ -41,7 +37,7 @@ const ScheduleSummary: React.FC<ScheduleProps> = ({ schedule }) => {
         Residents with Admin Days:
       </Typography>
       <List>
-        {schedule.adminDays.map((adminDay, index) => (
+        {data.adminDays.map((adminDay, index) => (
           <ListItem key={index}>
             <ListItemText primary={`${adminDay.user.name}: ${adminDay.date}`} />
           </ListItem>
