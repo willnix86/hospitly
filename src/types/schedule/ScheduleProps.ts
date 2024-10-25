@@ -1,7 +1,7 @@
-import Schedule from "./Schedule";
+import { CallScheduleData} from "./Schedule";
 
 interface ScheduleProps {
-    schedule: Schedule
+    data: CallScheduleData
 }
 
 export default ScheduleProps;

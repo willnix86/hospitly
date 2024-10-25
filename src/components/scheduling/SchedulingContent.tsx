@@ -1,120 +1,87 @@
-// pages/admin/manage-schedules.tsx
 import * as React from 'react';
 import {
   Typography,
   Paper,
-  Container
+  Container,
+  CircularProgress
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import OnCallCalendar from './views/OnCallCalendar';
 import ScheduleSummary from './views/ScheduleSummary';
-import { Schedule, User } from '@/types';
+import { CallScheduleData } from '@/types';
 import { CalendarNavigationAction } from '@/types/CalendarToolbarTypes';
 import dayjs from 'dayjs';
 import CalendarToolbar from '../CalendarToolbar';
 
-// Dummy data for residents on call, vacations, and admin days
-const mockUser1: User = { id: 1, name: 'Dr. Smith', role: 'resident', avatar: 'avatar1.png' };
-const mockUser2: User = { id: 2, name: 'Dr. Johnson', role: 'resident', avatar: 'avatar2.png' };
-const mockUser3: User = { id: 3, name: 'Dr. Patel', role: 'resident', avatar: 'avatar3.png' };
-const mockUser4: User = { id: 4, name: 'Dr. Brown', role: 'resident', avatar: 'avatar4.png' };
-const mockUser5: User = { id: 5, name: 'Dr. Green', role: 'resident', avatar: 'avatar5.png' };
-
-const mockScheduleData: { [key: string]: Schedule } = {
-  '2024-10': {
-    month: 'October',
-    year: '2024',
-    onCall: {
-      '2024-10-01': [mockUser1, mockUser2],
-      '2024-10-02': [mockUser3],
-      '2024-10-03': [mockUser4],
-      '2024-10-04': [mockUser5, mockUser1],
-    },
-    vacations: [
-      { user: mockUser1, startDate: '2024-10-10', endDate: '2024-10-15' },
-      { user: mockUser3, startDate: '2024-10-20', endDate: '2024-10-25' },
-    ],
-    adminDays: [
-      { user: mockUser2, date: '2024-10-05' },
-      { user: mockUser4, date: '2024-10-12' },
-    ],
-  },
-  '2024-11': {
-    month: 'November',
-    year: '2024',
-    onCall: {
-      '2024-11-01': [mockUser2],
-      '2024-11-02': [mockUser3, mockUser1],
-      '2024-11-03': [mockUser4, mockUser5],
-      '2024-11-04': [mockUser1, mockUser3],
-    },
-    vacations: [
-      { user: mockUser2, startDate: '2024-11-15', endDate: '2024-11-20' },
-      { user: mockUser5, startDate: '2024-11-10', endDate: '2024-11-12' },
-    ],
-    adminDays: [
-      { user: mockUser3, date: '2024-11-10' },
-      { user: mockUser1, date: '2024-11-18' },
-    ],
-  },
-  '2024-12': {
-    month: 'December',
-    year: '2024',
-    onCall: {
-      '2024-12-01': [mockUser4],
-      '2024-12-02': [mockUser5, mockUser2],
-      '2024-12-03': [mockUser1, mockUser3],
-      '2024-12-04': [mockUser2, mockUser4],
-    },
-    vacations: [
-      { user: mockUser4, startDate: '2024-12-05', endDate: '2024-12-10' },
-      { user: mockUser3, startDate: '2024-12-15', endDate: '2024-12-20' },
-    ],
-    adminDays: [
-      { user: mockUser5, date: '2024-12-08' },
-      { user: mockUser2, date: '2024-12-22' },
-    ],
-  },
-  '2025-01': {
-    month: 'January',
-    year: '2025',
-    onCall: {
-      '2025-01-01': [mockUser5, mockUser1],
-      '2025-01-02': [mockUser3, mockUser4],
-      '2025-01-03': [mockUser2],
-      '2025-01-04': [mockUser1, mockUser5],
-    },
-    vacations: [
-      { user: mockUser1, startDate: '2025-01-10', endDate: '2025-01-15' },
-      { user: mockUser4, startDate: '2025-01-20', endDate: '2025-01-25' },
-    ],
-    adminDays: [
-      { user: mockUser3, date: '2025-01-12' },
-      { user: mockUser5, date: '2025-01-18' },
-    ],
-  },
-};
-
-const SchedulingContent = ({ schedules }: { schedules: Schedule[] }) => {
+const SchedulingContent = () => {
   const [currentDate, setCurrentDate] = React.useState(dayjs());
+  const [schedules, setSchedules] = React.useState<CallScheduleData[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const fetchSchedules = React.useCallback(async () => {
+    const startDate = currentDate.startOf('month');
+    const endDate = currentDate.add(2, 'month').endOf('month');
+    
+    // Check if we already have the schedules for these months
+    const missingMonths = [];
+    for (let month = startDate; month.isBefore(endDate); month = month.add(1, 'month')) {
+      const monthStr = month.format('YYYY-MM');
+      if (!schedules.some(s => s.month === monthStr)) {
+        missingMonths.push(monthStr);
+      }
+    }
+
+    if (missingMonths.length === 0) {
+      setLoading(false);
+      return; // All schedules are already fetched
+    }
+
+    const url = `/api/schedules?startDate=${startDate.format('YYYY-MM-DD')}&endDate=${endDate.format('YYYY-MM-DD')}`;
+
+    try {
+      setLoading(true);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const newSchedules: CallScheduleData = await response.json();
+      setSchedules(prevSchedules => {
+        const updatedSchedules: CallScheduleData[] = [...prevSchedules];
+        Object.entries(newSchedules).forEach(([month, schedule]) => {
+          const index = updatedSchedules.findIndex(s => s.month === month);
+          if (index !== -1) {
+            updatedSchedules[index] = schedule;
+          } else {
+            updatedSchedules.push(schedule);
+          }
+        });
+        return updatedSchedules;
+      });
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch schedules');
+      console.error('Error fetching schedules:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentDate, schedules]);
+
+  React.useEffect(() => {
+    fetchSchedules();
+  }, [fetchSchedules]);
 
   const handleCalendarNavigation = (action: CalendarNavigationAction) => {
     switch (action) {
       case CalendarNavigationAction.PREV:
-        // Logic for navigating to the previous month
         setCurrentDate((date) => date.subtract(1, 'month'));
         break;
-  
       case CalendarNavigationAction.NEXT:
-        // Logic for navigating to the next month
         setCurrentDate((date) => date.add(1, 'month'));
         break;
-  
       case CalendarNavigationAction.TODAY:
-        // Logic for navigating to today's date
         setCurrentDate(dayjs());
         break;
-  
       default:
         console.log('Unknown action');
         break;
@@ -124,8 +91,21 @@ const SchedulingContent = ({ schedules }: { schedules: Schedule[] }) => {
   const currentMonth1 = currentDate.format('YYYY-MM');
   const currentMonth2 = currentDate.add(1, 'month').format('YYYY-MM');
 
-  const currentSchedule1 = mockScheduleData[currentMonth1] || { month: currentDate.format('MMMM'), year: currentDate.format('YYYY'), onCall: {}, vacations: [], adminDays: [] };
-  const currentSchedule2 = mockScheduleData[currentMonth2] || { month: currentDate.add(1, 'month').format('MMMM'), year: currentDate.add(1, 'month').format('YYYY'), onCall: {}, vacations: [], adminDays: [] };
+  const currentSchedule1 = schedules.find(s => s.month === currentMonth1) || { 
+    month: currentMonth1,
+    callShifts: [],
+    vacationDays: [],
+    adminDays: []
+  };
+  const currentSchedule2 = schedules.find(s => s.month === currentMonth2) || {
+    month: currentMonth2,
+    callShifts: [],
+    vacationDays: [],
+    adminDays: []
+  };
+
+  if (loading) return <CircularProgress />;
+  if (error) return <Typography color="error">{error}</Typography>;
 
   return (
     <Container maxWidth="xl">
@@ -139,17 +119,17 @@ const SchedulingContent = ({ schedules }: { schedules: Schedule[] }) => {
         {/* First Month Calendar */}
         <Grid size={{ xs:12, md:6 }}>
           <Paper elevation={3} sx={{ width: '100%' }}>
-            <OnCallCalendar schedule={currentSchedule1} />
+            <OnCallCalendar data={currentSchedule1} />
           </Paper>
-          <ScheduleSummary schedule={currentSchedule1} />
+          <ScheduleSummary data={currentSchedule1} />
         </Grid>
 
         {/* Second Month Calendar */}
         <Grid size={{ xs:12, md:6 }}>
           <Paper elevation={3} sx={{ width: '100%' }}>
-            <OnCallCalendar schedule={currentSchedule2} />
+            <OnCallCalendar data={currentSchedule2} />
           </Paper>
-          <ScheduleSummary schedule={currentSchedule2} />
+          <ScheduleSummary data={currentSchedule2} />
         </Grid>
       </Grid>
     </Container>

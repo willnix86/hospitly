@@ -1,9 +1,17 @@
-// Define a type for the user object
-interface User {
-    id: number;
+export interface User {
+    id?: number;
     name: string;
-    role: 'resident' | 'admin';
-    avatar: string;
+    position: Position;
+    department: Department;
+    isEditor: boolean;
 }
 
-export default User;
+export interface Department {
+    id?: number;
+    name: string;
+}
+
+export interface Position {
+    id?: number;
+    name: string;
+}
