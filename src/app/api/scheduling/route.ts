@@ -1,75 +1,110 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 
 // Base URL for the AWS API Gateway
 const API_GATEWAY_BASE_URL = process.env.API_GATEWAY_BASE_URL;
+const API_TOKEN = process.env.API_TOKEN;
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { method } = req;
-
-  switch (method) {
-    case 'GET':
-      return handleGet(req, res);
-    // case 'POST':
-    //   return handlePost(req, res);
-    // case 'PUT':
-    //   return handlePut(req, res);
-    // case 'DELETE':
-    //   return handleDelete(req, res);
-    default:
-      return res.status(405).json({ message: `Method ${method} Not Allowed` });
+export async function POST(request: NextRequest) {
+  const headers = { 
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${API_TOKEN || ''}` // Add if using bearer token
   }
-}
 
-// GET handler - Fetch work schedule for a user or call schedule for a department
-const handleGet = async (req: NextApiRequest, res: NextApiResponse) => {
   const { 
     userId, 
-    departmentId,
+    department,
     hospitalName,
     date 
-  } = req.body;
+  } = await request.json();
 
   try {
     if (userId) {
       // Use fetch to get work schedule for a user from API Gateway
       const response = await fetch(`${API_GATEWAY_BASE_URL}/scheduling/getUserSchedule`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST',
+        headers,
         body: JSON.stringify({ 
           hospitalName,
           userId, 
-          date
+          date,
+          action: "getUserSchedule"
         }),
       });
+      
       const data = await response.json();
-
+      
       if (!response.ok) {
-        return res.status(response.status).json(data);
+        return NextResponse.json(
+          { success: false, error: data },
+          { status: response.status }
+        );
       }
 
-      return res.status(200).json(data);
-    } else if (departmentId) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          month: date, // 'YYYY-MM' format
+          callShifts: data.callShifts || [],
+          vacationDays: data.vacationDays || [],
+          adminDays: data.adminDays || []
+        }
+      });
+
+    } else if (department) {
       // Use fetch to get call schedule for a department from API Gateway
       const response = await fetch(`${API_GATEWAY_BASE_URL}/scheduling/getCallSchedule`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ departmentId, date }),
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          hospitalName, 
+          department,
+          date,
+          action: "getCallSchedule"
+        }),
       });
+      
       const data = await response.json();
-
+      
       if (!response.ok) {
-        return res.status(response.status).json(data);
+        console.log(response)
+        return NextResponse.json(
+          { success: false, error: data },
+          { status: response.status }
+        );
       }
 
-      return res.status(200).json(data);
+      return NextResponse.json({
+        success: true,
+        data: {
+          month: date, // 'YYYY-MM' format
+          callShifts: data.callShifts || [],
+          vacationDays: data.vacationDays || [],
+          adminDays: data.adminDays || []
+        }
+      });
     } else {
-      return res.status(400).json({ message: 'Missing userId or departmentId' });
+      return NextResponse.json(
+        { success: false, error: 'Missing userId or department' },
+        { status: 400 }
+      );
     }
   } catch (error) {
-    return handleError(res, error);
+    return handleError(error)
   }
-};
+}
 
+// Helper function to handle errors
+const handleError = (error: any) => {
+  console.error('API Error:', error);
+  return NextResponse.json(
+    { 
+      success: false, 
+      error: 'Internal Server Error',
+      details: error instanceof Error ? error.message : String(error)
+    },
+    { status: 500 }
+  );
+};
 // PUT handler - Edit existing schedules
 // const handlePut = async (req: NextApiRequest, res: NextApiResponse) => {
 //   const { userId, departmentId, scheduleData } = req.body;
@@ -135,8 +170,3 @@ const handleGet = async (req: NextApiRequest, res: NextApiResponse) => {
 //     return handleError(res, error);
 //   }
 // };
-
-const handleError = (res: NextApiResponse, error: any) => {
-    console.error(error);
-    return res.status(500).json({ message: 'Internal Server Error', error });
-};

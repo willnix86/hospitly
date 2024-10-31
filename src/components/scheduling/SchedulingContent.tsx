@@ -3,7 +3,8 @@ import {
   Typography,
   Paper,
   Container,
-  CircularProgress
+  CircularProgress,
+  Box
 } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import OnCallCalendar from './views/OnCallCalendar';
@@ -19,37 +20,65 @@ const SchedulingContent = () => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 
-  const fetchSchedules = React.useCallback(async () => {
-    const startDate = currentDate.startOf('month');
-    const endDate = currentDate.add(2, 'month').endOf('month');
-    
-    // Check if we already have the schedules for these months
-    const missingMonths = [];
-    for (let month = startDate; month.isBefore(endDate); month = month.add(1, 'month')) {
-      const monthStr = month.format('YYYY-MM');
-      if (!schedules.some(s => s.month === monthStr)) {
-        missingMonths.push(monthStr);
-      }
-    }
+  // TODO: Update to remove hardcoded hospital and dept
+  const fetchScheduleForMonth = async (date: string) => {
+    try {
+      const response = await fetch('/api/scheduling', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          date: date,
+          department: {
+            id: '16',
+            name: 'Plastics'
+          },
+          hospitalName: 'MUSC Health University Medical Center'
+        })
+      });
 
-    if (missingMonths.length === 0) {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch schedule');
+      }
+
+      return result.data;
+    } catch (err) {
+      console.error(`Error fetching schedule for ${date}:`, err);
+      throw err;
+    }
+  };
+
+  const fetchSchedules = React.useCallback(async () => {
+    const month1 = currentDate;
+    const month2 = currentDate.add(1, 'month');
+    
+    // First, determine which months need to be fetched
+    const monthsToFetch = [month1, month2]
+      .map(month => month.format('YYYY-MM'))
+      .filter(monthStr => !schedules.some(s => s.month === monthStr));
+
+    if (monthsToFetch.length === 0) {
       setLoading(false);
       return; // All schedules are already fetched
     }
 
-    const url = `/api/schedules?startDate=${startDate.format('YYYY-MM-DD')}&endDate=${endDate.format('YYYY-MM-DD')}`;
-
     try {
       setLoading(true);
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const newSchedules: CallScheduleData = await response.json();
+      
+      // Fetch schedules for each month in parallel
+      const newSchedulesPromises = monthsToFetch.map(month => fetchScheduleForMonth(month));
+      const newSchedulesResults = await Promise.all(newSchedulesPromises);
+
       setSchedules(prevSchedules => {
-        const updatedSchedules: CallScheduleData[] = [...prevSchedules];
-        Object.entries(newSchedules).forEach(([month, schedule]) => {
-          const index = updatedSchedules.findIndex(s => s.month === month);
+        const updatedSchedules = [...prevSchedules];
+        newSchedulesResults.forEach(schedule => {
+          const index = updatedSchedules.findIndex(s => s.month === schedule.month);
           if (index !== -1) {
             updatedSchedules[index] = schedule;
           } else {
@@ -58,6 +87,7 @@ const SchedulingContent = () => {
         });
         return updatedSchedules;
       });
+      
       setError(null);
     } catch (err) {
       setError('Failed to fetch schedules');
@@ -65,7 +95,7 @@ const SchedulingContent = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentDate, schedules]);
+}, [currentDate, schedules]);
 
   React.useEffect(() => {
     fetchSchedules();
@@ -104,34 +134,45 @@ const SchedulingContent = () => {
     adminDays: []
   };
 
-  if (loading) return <CircularProgress />;
-  if (error) return <Typography color="error">{error}</Typography>;
-
   return (
     <Container maxWidth="xl">
       <Typography variant="h4" gutterBottom>
         Manage Schedules
       </Typography>
 
-      <CalendarToolbar date={currentDate.toDate()} onNavigate={handleCalendarNavigation} />
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <CircularProgress size={60} />
+        </Box>
+      ) : error ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <Typography variant="h6" color="error">
+            {error}
+          </Typography>
+        </Box>
+      ) : (
+        <>
+          <CalendarToolbar date={currentDate.toDate()} onNavigate={handleCalendarNavigation} />
 
-      <Grid container spacing={4}>
-        {/* First Month Calendar */}
-        <Grid size={{ xs:12, md:6 }}>
-          <Paper elevation={3} sx={{ width: '100%' }}>
-            <OnCallCalendar data={currentSchedule1} />
-          </Paper>
-          <ScheduleSummary data={currentSchedule1} />
-        </Grid>
+          <Grid container spacing={4}>
+            {/* First Month Calendar */}
+            <Grid size={{ xs:12, md:6 }}>
+              <Paper elevation={3} sx={{ width: '100%' }}>
+                <OnCallCalendar data={currentSchedule1} />
+              </Paper>
+              <ScheduleSummary data={currentSchedule1} />
+            </Grid>
 
-        {/* Second Month Calendar */}
-        <Grid size={{ xs:12, md:6 }}>
-          <Paper elevation={3} sx={{ width: '100%' }}>
-            <OnCallCalendar data={currentSchedule2} />
-          </Paper>
-          <ScheduleSummary data={currentSchedule2} />
-        </Grid>
-      </Grid>
+            {/* Second Month Calendar */}
+            <Grid size={{ xs:12, md:6 }}>
+              <Paper elevation={3} sx={{ width: '100%' }}>
+                <OnCallCalendar data={currentSchedule2} />
+              </Paper>
+              <ScheduleSummary data={currentSchedule2} />
+            </Grid>
+          </Grid>
+        </>
+      )}
     </Container>
   );
 };
