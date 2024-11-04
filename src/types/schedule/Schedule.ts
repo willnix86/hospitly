@@ -2,12 +2,14 @@ import { User } from '../user/User';
 
 // Enum representing the different types of shifts (On-Call, Vacation, etc.)
 const enum ShiftTypeEnum {
+    DayShift = 'Day Shift',
+    NightShift = 'Night Shift',
     OnCall = 'On-Call',
     Vacation = 'Off (Vacation)',
     Admin = 'Off (Admin Day)',
     Rest = 'Off (Rest)',
     Weekend = 'Off (Weekend)',
-    Available = ''  // When the user has no specific shift
+    Available = 'Available'  // When the user has no specific shift
 }
 
 // Interface representing a ShiftType, matching the ShiftTypes table in the DB.

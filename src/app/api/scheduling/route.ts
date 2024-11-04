@@ -10,84 +10,68 @@ export async function POST(request: NextRequest) {
     'Authorization': `Bearer ${API_TOKEN || ''}` // Add if using bearer token
   }
 
-  const { 
-    userId, 
-    department,
-    hospitalName,
-    date 
-  } = await request.json();
+  const requestData = await request.json();
 
   try {
-    if (userId) {
-      // Use fetch to get work schedule for a user from API Gateway
-      const response = await fetch(`${API_GATEWAY_BASE_URL}/scheduling/getUserSchedule`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ 
-          hospitalName,
-          userId, 
-          date,
-          action: "getUserSchedule"
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        return NextResponse.json(
-          { success: false, error: data },
-          { status: response.status }
-        );
-      }
+    switch (requestData.action) {
+      case "getUserSchedule":
+        // Use fetch to get work schedule for a user from API Gateway
+        const userResponse = await fetch(`${API_GATEWAY_BASE_URL}/scheduling/getUserSchedule`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ 
+            ...requestData
+          }),
+        });
+        
+        const userData = await userResponse.json();
 
-      return NextResponse.json({
-        success: true,
-        data: {
-          month: date, // 'YYYY-MM' format
-          callShifts: data.callShifts || [],
-          vacationDays: data.vacationDays || [],
-          adminDays: data.adminDays || []
+        if (!userResponse.ok) {
+          return NextResponse.json(
+            { success: false, error: userData },
+            { status: userData.status }
+          );
         }
-      });
 
-    } else if (department) {
-      // Use fetch to get call schedule for a department from API Gateway
-      const response = await fetch(`${API_GATEWAY_BASE_URL}/scheduling/getCallSchedule`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
-          hospitalName, 
-          department,
-          date,
-          action: "getCallSchedule"
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        console.log(response)
-        return NextResponse.json(
-          { success: false, error: data },
-          { status: response.status }
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        data: {
-          month: date, // 'YYYY-MM' format
-          callShifts: data.callShifts || [],
-          vacationDays: data.vacationDays || [],
-          adminDays: data.adminDays || []
+        return NextResponse.json({
+          success: true,
+          ...userData
+        });
+        
+      case "getCallSchedule":
+        // Use fetch to get call schedule for a department from API Gateway
+        const callResponse = await fetch(`${API_GATEWAY_BASE_URL}/scheduling/getCallSchedule`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            ...requestData
+          }),
+        });
+        
+        const data = await callResponse.json();
+        
+        if (!callResponse.ok) {
+          return NextResponse.json(
+            { success: false, error: data },
+            { status: callResponse.status }
+          );
         }
-      });
-    } else {
-      return NextResponse.json(
-        { success: false, error: 'Missing userId or department' },
-        { status: 400 }
-      );
+
+        return NextResponse.json({
+          success: true,
+          data: {
+            month: requestData.date, // 'YYYY-MM' format
+            callShifts: data.callShifts || [],
+            vacationDays: data.vacationDays || [],
+            adminDays: data.adminDays || []
+          }
+        });
+
     }
+    return NextResponse.json(
+      { success: false, error: 'Missing userId or department' },
+      { status: 400 }
+    );
   } catch (error) {
     return handleError(error)
   }

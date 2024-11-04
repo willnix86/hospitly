@@ -1,17 +1,22 @@
-// components/UpcomingShifts.tsx
 import * as React from 'react';
-import { Typography, List, ListItem, ListItemText, Paper } from '@mui/material';
+import { Typography, List, ListItem, ListItemText } from '@mui/material';
+import moment from 'moment';
 
-// Example data for upcoming shifts (you can replace this with real data from your API)
-const shifts = [
-  { date: 'Oct 3, 2024', time: '8:00 AM - 5:00 PM', department: 'Emergency' },
-  { date: 'Oct 5, 2024', time: '6:00 PM - 12:00 AM', department: 'Pediatrics' },
-  { date: 'Oct 7, 2024', time: '8:00 AM - 5:00 PM', department: 'Surgery' },
-];
+interface Shift {
+  startTime: string;
+  endTime: string;
+  shiftType: {
+    name: string;
+  };
+}
 
-const UpcomingShifts = ({ userId } : { userId: number}) => {
+interface UpcomingShiftsProps {
+  shifts: Shift[];
+}
+
+const UpcomingShifts = ({ shifts }: UpcomingShiftsProps) => {
   return (
-    <Paper elevation={3} sx={{ padding: 2 }}>
+    <>
       <Typography variant="h6" gutterBottom>
         Upcoming Shifts
       </Typography>
@@ -19,13 +24,13 @@ const UpcomingShifts = ({ userId } : { userId: number}) => {
         {shifts.map((shift, index) => (
           <ListItem key={index}>
             <ListItemText
-              primary={`${shift.date}: ${shift.time}`}
-              secondary={shift.department}
+              primary={`${moment(shift.startTime).format('MMM D, YYYY')}: ${moment(shift.startTime).format('h:mm A')} - ${moment(shift.endTime).format('h:mm A')}`}
+              secondary={shift.shiftType.name}
             />
           </ListItem>
         ))}
       </List>
-    </Paper>
+    </>
   );
 };
 

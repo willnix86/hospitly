@@ -24,13 +24,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Simulate fetching user data (replace this with your actual logic)
   useEffect(() => {
     const fetchUser = async () => {
-      const loggedInUser: User = {
-        id: 123,
-        name: 'Dr. Smith',
-        role: 'admin',  // Could be 'admin' or 'resident'
-        avatar: '/profile-picture.jpg',
-      };
-      setUser(loggedInUser);
+      const testUser: User = { 
+        id: 172!,
+        name: "Muir",
+        position: {
+          id: 2,
+          name: "PGY2"
+        },
+        department: {
+          id: 16,
+          name: "Plastics"
+        },
+        isEditor: true,
+      }
+      // TODO: Remove test user
+      setUser(testUser);
       setLoading(false);
     };
 

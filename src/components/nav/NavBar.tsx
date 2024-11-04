@@ -20,12 +20,12 @@ const NavBar = () => {
               <Box display="flex" alignItems="center" flexGrow={1}>
                 <Avatar alt={user.name} src={user.avatar} sx={{ width: 56, height: 56, mr: 2 }} />
                 <Typography variant="h6" component="div">
-                  Welcome, {user.name}!
+                  Welcome, Dr. {user.name}!
                 </Typography>
               </Box>
 
               {/* Admin Controls (only show if the user is an admin) */}
-              {user.role === 'admin' && (
+              {user.isEditor && (
                 <Box sx={{ mr: 2 }}>
                   <AdminControls />
                 </Box>

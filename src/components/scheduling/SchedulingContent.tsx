@@ -9,12 +9,12 @@ import {
 import Grid from '@mui/material/Grid2';
 import OnCallCalendar from './views/OnCallCalendar';
 import ScheduleSummary from './views/ScheduleSummary';
-import { CallScheduleData } from '@/types';
+import { CallScheduleData, User } from '@/types';
 import { CalendarNavigationAction } from '@/types/CalendarToolbarTypes';
 import dayjs from 'dayjs';
-import CalendarToolbar from '../CalendarToolbar';
+import CalendarToolbar from '../common/CalendarToolbar';
 
-const SchedulingContent = () => {
+const SchedulingContent = ({ user }: { user: User }) => {
   const [currentDate, setCurrentDate] = React.useState(dayjs());
   const [schedules, setSchedules] = React.useState<CallScheduleData[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -29,12 +29,11 @@ const SchedulingContent = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          date: date,
-          department: {
-            id: '16',
-            name: 'Plastics'
-          },
-          hospitalName: 'MUSC Health University Medical Center'
+          userId: user.id,
+          date,
+          department: user.department,
+          hospitalName: 'MUSC Health University Medical Center',
+          action: "getCallSchedule"
         })
       });
 
@@ -99,7 +98,7 @@ const SchedulingContent = () => {
 
   React.useEffect(() => {
     fetchSchedules();
-  }, [fetchSchedules]);
+  }, []);
 
   const handleCalendarNavigation = (action: CalendarNavigationAction) => {
     switch (action) {

@@ -1,18 +1,9 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import moment from 'moment';
-import { Box, Typography, Alert } from '@mui/material';
+import { Typography, Alert, Box } from '@mui/material';
 import { CallScheduleData } from '@/types';
-
-import 'react-big-calendar/lib/css/react-big-calendar.css';
-
-const localizer = momentLocalizer(moment);
-
-const parseDate = (dateString: string) : Date => {
-  // Extract just the YYYY-MM-DD portion
-  const datePart = dateString.split('T')[0];
-  return moment(datePart).toDate();
-}
+import { parseDate } from '@/services';
+import BaseCalendar from '@/components/common/BaseCalendar';
+import moment from 'moment';
 
 interface DayWithError {
   date: string;
@@ -20,7 +11,6 @@ interface DayWithError {
 }
 
 const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
-  // Initialize with the date from props instead of new Date()
   const [currentDate, setCurrentDate] = useState(() => parseDate(data.month));
   const [insufficientCoverageDays, setInsufficientCoverageDays] = useState<DayWithError[]>([]);
 
@@ -60,15 +50,12 @@ const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
     };
   }, [data]);
 
- const events = useMemo(() => {
+  const events = useMemo(() => {
     // Convert the schedule data into events format for react-big-calendar
     const onCallEvents = data.callShifts.map((shift) => {
       // Parse the date and set to local midnight
-      console.log("shiftDate", shift.date)
       const startDate = parseDate(shift.date);
-      console.log("startDate", startDate);
       const endDate = parseDate(shift.date);
-      console.log("endDate", endDate);
       return {
         title: shift.user.name,
         start: startDate,
@@ -93,7 +80,6 @@ const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
     return null;
   }, [currentDate, data]);
 
-  // Custom day renderer for the Calendar
   const dayPropGetter = useCallback((date: Date) => {
     const dateStr = moment(date).format('YYYY-MM-DD');
     const hasError = insufficientCoverageDays.some(day => day.date === dateStr);
@@ -101,16 +87,15 @@ const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
     if (hasError) {
       return {
         style: {
-          backgroundColor: '#ffebee', // Light red background
-          border: '1px solid #ef5350', // Red border
+          backgroundColor: '#ffebee',
+          border: '1px solid #ef5350',
         }
       };
     }
     return {};
   }, [insufficientCoverageDays]);
 
-  return (
-    <Box>
+    const headerContent = (
       <Box 
         display="flex" 
         width="100%" 
@@ -139,19 +124,17 @@ const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
             {insufficientCoverageDays.length} {insufficientCoverageDays.length === 1 ? 'day' : 'days'} found with insufficient coverage
           </Alert>
         )}
-      </Box>
-      <Calendar
-        localizer={localizer} 
-        events={events}
-        startAccessor="start"
-        endAccessor="end"
-        date={currentDate} // This controls the visible date (month and year)
-        toolbar={false}
-        style={{ height: 500 }}
-        onNavigate={(date) => setCurrentDate(date)} // Update the current date when the calendar is navigated
-        dayPropGetter={dayPropGetter}
-      />
     </Box>
+  );
+
+  return (
+    <BaseCalendar
+      events={events}
+      date={currentDate}
+      dayPropGetter={dayPropGetter}
+      headerContent={headerContent}
+      onNavigate={setCurrentDate}
+    />
   );
 };
 
