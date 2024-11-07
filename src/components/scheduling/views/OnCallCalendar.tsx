@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Typography, Alert, Box } from '@mui/material';
+import { Typography, Alert, Box, Button } from '@mui/material';
 import { CallScheduleData } from '@/types';
 import { parseDate } from '@/services';
 import BaseCalendar from '@/components/common/BaseCalendar';
@@ -15,7 +15,20 @@ const RESIDENT_COLORS = {
   SENIOR: '#2196F3'  // Blue
 };
 
-const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
+interface OnCallCalendarProps {
+  data: CallScheduleData;
+  onRegenerate: (month: string) => Promise<void>;
+  isRegenerating: boolean;
+  onErrorsChange: (hasErrors: boolean) => void;
+}
+
+
+const OnCallCalendar = ({ 
+  data, 
+  onRegenerate, 
+  isRegenerating,
+  onErrorsChange 
+}: OnCallCalendarProps) => {
   // TODO: We don't want to allow backward navigation past account start month
   const [currentDate, setCurrentDate] = useState(() => parseDate(data.month));
   const [insufficientCoverageDays, setInsufficientCoverageDays] = useState<DayWithError[]>([]);
@@ -24,6 +37,10 @@ const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
   useEffect(() => {
     setCurrentDate(parseDate(data.month));
   }, [data.month]);
+
+  useEffect(() => {
+    onErrorsChange(insufficientCoverageDays.length > 0);
+  }, [insufficientCoverageDays, onErrorsChange]);
 
   // Check for days with insufficient coverage
   useEffect(() => {
@@ -123,35 +140,45 @@ const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
     };
   }, []);
 
-    const headerContent = (
-      <Box 
-        display="flex" 
-        width="100%" 
-        justifyContent="space-between"
-        alignItems="center" 
-        height="3rem"
-      >
-        <Typography variant="h6" paddingLeft="1rem">
-          {month} {year}
-        </Typography>
+  const headerContent = (
+    <Box 
+      display="flex" 
+      width="100%" 
+      justifyContent="space-between"
+      alignItems="center" 
+      height="3rem"
+    >
+      <Typography variant="h6" paddingLeft="1rem">
+        {month} {year}
+      </Typography>
 
-        {showNoDataMessage === 'warning' && (
-          <Alert severity="warning">
-            No historical schedule data exists for {month} {year}.
-          </Alert>
-        )}
-        
-        {showNoDataMessage === 'error' && (
-          <Alert severity="error">
-            Unable to load schedule data for this month {month} {year}.
-          </Alert>
-        )}
+      {showNoDataMessage === 'warning' && (
+        <Alert severity="warning">
+          No historical schedule data exists for {month} {year}.
+        </Alert>
+      )}
+      
+      {showNoDataMessage === 'error' && (
+        <Alert severity="error">
+          Unable to load schedule data for this month {month} {year}.
+        </Alert>
+      )}
 
-        {insufficientCoverageDays.length > 0 && !showNoDataMessage && (
+      {insufficientCoverageDays.length > 0 && !showNoDataMessage && (
+        <Box display="flex" alignItems="center" gap={2} paddingRight="1rem">
           <Alert severity="error">
             {insufficientCoverageDays.length} {insufficientCoverageDays.length === 1 ? 'day' : 'days'} found with insufficient coverage
           </Alert>
-        )}
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={() => onRegenerate(data.month)}
+            disabled={isRegenerating}
+          >
+            {isRegenerating ? 'Regenerating...' : 'Regenerate'}
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 

@@ -67,6 +67,32 @@ export async function POST(request: NextRequest) {
           }
         });
 
+      case "regenerateSchedule":
+        const regenerateResponse = await fetch(`${API_GATEWAY_BASE_URL}/scheduling/regenerateSchedule`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            userId: requestData.userId,
+            department: requestData.department,
+            date: requestData.date,
+            hospitalName: requestData.hospitalName,
+            action: 'regenerateSchedule'
+          }),
+        });
+        
+        const regenerateData = await regenerateResponse.json();
+        
+        if (!regenerateResponse.ok) {
+          return NextResponse.json(
+            { success: false, error: regenerateData },
+            { status: regenerateResponse.status }
+          );
+        }
+
+        return NextResponse.json({
+          success: true,
+          data: regenerateData
+        });
     }
     return NextResponse.json(
       { success: false, error: 'Missing userId or department' },
