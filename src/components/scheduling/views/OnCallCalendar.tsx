@@ -10,7 +10,13 @@ interface DayWithError {
   doctorCount: number;
 }
 
+const RESIDENT_COLORS = {
+  JUNIOR: '#4CAF50', // Green
+  SENIOR: '#2196F3'  // Blue
+};
+
 const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
+  // TODO: We don't want to allow backward navigation past account start month
   const [currentDate, setCurrentDate] = useState(() => parseDate(data.month));
   const [insufficientCoverageDays, setInsufficientCoverageDays] = useState<DayWithError[]>([]);
 
@@ -51,19 +57,24 @@ const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
   }, [data]);
 
   const events = useMemo(() => {
-    // Convert the schedule data into events format for react-big-calendar
     const onCallEvents = data.callShifts.map((shift) => {
-      // Parse the date and set to local midnight
       const startDate = parseDate(shift.date);
       const endDate = parseDate(shift.date);
+      const pgyLevel = parseInt(shift.user.position.name.replace('PGY', ''));
+      const isJunior = pgyLevel <= 3;
+      
       return {
         title: shift.user.name,
         start: startDate,
         end: endDate,
         allDay: true,
+        position: shift.user.position,
+        resourceId: isJunior ? 1 : 2  // This controls the stacking order
       };
     }).flat();
-    return [...onCallEvents];
+
+    // Sort events so seniors always come second
+    return onCallEvents.sort((a, b) => (a.resourceId || 0) - (b.resourceId || 0));
   }, [data]);
 
   const showNoDataMessage = useMemo(() => {
@@ -94,6 +105,23 @@ const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
     }
     return {};
   }, [insufficientCoverageDays]);
+
+  const eventPropGetter = useCallback((event: any) => {
+    // Move the PGY level logic here
+    const pgyLevel = parseInt(event.position.name.replace('PGY', ''));
+    const isJunior = pgyLevel <= 3;
+
+    return {
+      style: {
+        backgroundColor: isJunior ? RESIDENT_COLORS.JUNIOR : RESIDENT_COLORS.SENIOR,
+        borderRadius: '0px',
+        opacity: 0.8,
+        color: '#fff',
+        border: '0px',
+        display: 'block'
+      }
+    };
+  }, []);
 
     const headerContent = (
       <Box 
@@ -132,6 +160,7 @@ const OnCallCalendar = ({ data }: { data: CallScheduleData }) => {
       events={events}
       date={currentDate}
       dayPropGetter={dayPropGetter}
+      eventPropGetter={eventPropGetter}
       headerContent={headerContent}
       onNavigate={setCurrentDate}
     />

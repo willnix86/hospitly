@@ -98,7 +98,7 @@ const SchedulingContent = ({ user }: { user: User }) => {
 
   React.useEffect(() => {
     fetchSchedules();
-  }, []);
+  }, [fetchSchedules]);
 
   const handleCalendarNavigation = (action: CalendarNavigationAction) => {
     switch (action) {

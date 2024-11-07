@@ -1,5 +1,5 @@
 import { Box } from '@mui/material';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
+import { Calendar, DayPropGetter, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
@@ -13,7 +13,13 @@ interface BaseCalendarProps {
     allDay: boolean;
   }>;
   date: Date;
-  dayPropGetter?: (date: Date) => { style?: React.CSSProperties };
+  dayPropGetter?: DayPropGetter;
+  eventPropGetter?: (
+    event: any,
+    start: Date,
+    end: Date,
+    isSelected: boolean
+  ) => { style?: React.CSSProperties };
   headerContent?: React.ReactNode;
   onNavigate?: (date: Date) => void;
 }
@@ -21,7 +27,8 @@ interface BaseCalendarProps {
 const BaseCalendar = ({ 
   events, 
   date, 
-  dayPropGetter, 
+  dayPropGetter,
+  eventPropGetter, 
   headerContent,
   onNavigate 
 }: BaseCalendarProps) => {
@@ -47,6 +54,7 @@ const BaseCalendar = ({
         toolbar={false}
         style={{ height: 500 }}
         dayPropGetter={dayPropGetter}
+        eventPropGetter={eventPropGetter}
         onNavigate={onNavigate}
       />
     </Box>
