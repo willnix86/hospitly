@@ -51,13 +51,15 @@ const ScheduleSummary = ({ data }: { data: CallScheduleData }) => {
         Call Shift Summary:
       </Typography>
       <List>
-        {Object.keys(callShiftsCount).map((resident, index) => (
-          <ListItem key={index}>
-            <ListItemText
-              primary={`${resident}: ${callShiftsCount[resident]} call shifts`}
-            />
-          </ListItem>
-        ))}
+        {Object.entries(callShiftsCount)
+          .sort(([, countA], [, countB]) => countB - countA)
+          .map(([resident, count], index) => (
+            <ListItem key={index}>
+              <ListItemText
+                primary={`${resident}: ${count} call shifts`}
+              />
+            </ListItem>
+          ))}
       </List>
     </Box>
   );
